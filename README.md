@@ -1,6 +1,6 @@
 # README
 
-This is a simple C++ 11 starter project with unit tests, benchmarks, etc. using [Meson](https://mesonbuild.com/) for builds.
+*uthread* is a lightweight fiber library I wrote just for fun. It is inspired by [Boost.fiber](https://github.com/boostorg/fiber) and [folly fibers](https://github.com/facebook/folly/tree/master/folly/fibers).
 
 ## Dependencies
 
