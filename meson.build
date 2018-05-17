@@ -57,6 +57,7 @@ if gtest.found() and gmock.found()
         [
             'test/main.cpp',
             'test/detail/context.cpp',
+            'test/detail/function.cpp',
         ],
         dependencies : [gtest, gmock],
         include_directories : incdirs,
