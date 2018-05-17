@@ -1,5 +1,5 @@
 project(
-    'cpp',
+    'uthread',
     'cpp',
     default_options : [
         'cpp_std=c++11',
@@ -19,21 +19,44 @@ incdirs = include_directories('include')
 
 install_subdir('include/cpp', install_dir : get_option('includedir'))
 
-lib = library(
-    'cpp',
-    [
-        'src/hello_world.cpp',
+libsrcs = [
+    'src/detail/context.cpp',
+    'src/exception.cpp',
+]
+
+arch_defs = {
+    'x86_64-linux'  : 'x86_64_sys_v',
+    'x86_64-darwin' : 'x86_64_sys_v',
+}
+
+arch_srcs = {
+    'x86_64_sys_v': [
+        'src/detail/arch/x86_64_sys_v/context.cpp',
+        'src/detail/arch/x86_64_sys_v/context.s',
     ],
+}
+
+target = host_machine.cpu_family() + '-' + host_machine.system()
+
+if arch_defs.has_key(target)
+    libsrcs += arch_srcs[arch_defs[target]]
+else
+    error(target + ' is not supported!')
+endif
+
+lib = library(
+    'uthread',
+    libsrcs,
     include_directories : incdirs,
     install : true,
 )
 
 if gtest.found() and gmock.found()
     test = executable(
-        'cpp-test',
+        'uthread-test',
         [
             'test/main.cpp',
-            'test/hello_world.cpp',
+            'test/detail/context.cpp',
         ],
         dependencies : [gtest, gmock],
         include_directories : incdirs,
@@ -45,10 +68,10 @@ endif
 
 if benchmark.found()
     bench = executable(
-        'cpp-bench',
+        'uthread-bench',
         [
             'bench/main.cpp',
-            'bench/hello_world.cpp',
+            'bench/detail/context.cpp',
         ],
         dependencies : [benchmark, threads],
         include_directories : incdirs,
@@ -57,15 +80,5 @@ if benchmark.found()
 
     benchmark('bench', bench)
 endif
-
-executable(
-    'cpp-bin',
-    [
-        'bin/hello_world.cpp',
-    ],
-    dependencies : [gflags],
-    include_directories : incdirs,
-    link_with : lib,
-)
 
 run_target('format', command : 'scripts/clang-format.sh')
