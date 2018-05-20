@@ -5,6 +5,8 @@
 namespace uthread {
 namespace detail {
 
+// TODO(amaximov): Try alignas + over-aligned operator new (C++ 17) to align and
+// fit the context in one 64 byte cache line.
 struct Context {
   std::uint64_t rbx;
   std::uint64_t rbp;
