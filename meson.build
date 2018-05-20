@@ -21,6 +21,7 @@ install_subdir('include/cpp', install_dir : get_option('includedir'))
 
 libsrcs = [
     'src/detail/context.cpp',
+    'src/detail/task.cpp',
     'src/exception.cpp',
 ]
 
@@ -58,6 +59,7 @@ if gtest.found() and gmock.found()
             'test/main.cpp',
             'test/detail/context.cpp',
             'test/detail/function.cpp',
+            'test/detail/task.cpp',
         ],
         dependencies : [gtest, gmock],
         include_directories : incdirs,
@@ -73,6 +75,7 @@ if benchmark.found()
         [
             'bench/main.cpp',
             'bench/detail/context.cpp',
+            'bench/detail/task.cpp',
         ],
         dependencies : [benchmark, threads],
         include_directories : incdirs,
