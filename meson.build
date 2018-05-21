@@ -2,7 +2,7 @@ project(
     'uthread',
     'cpp',
     default_options : [
-        'cpp_std=c++11',
+        'cpp_std=c++14',
         'warning_level=3',
     ],
     license : 'MIT',
@@ -23,6 +23,8 @@ libsrcs = [
     'src/detail/context.cpp',
     'src/detail/task.cpp',
     'src/exception.cpp',
+    'src/task.cpp',
+    'src/task_loop.cpp',
 ]
 
 arch_defs = {
@@ -60,6 +62,7 @@ if gtest.found() and gmock.found()
             'test/detail/context.cpp',
             'test/detail/function.cpp',
             'test/detail/task.cpp',
+            'test/task.cpp',
         ],
         dependencies : [gtest, gmock],
         include_directories : incdirs,

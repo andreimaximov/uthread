@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 
 #include <uthread/detail/task.hpp>
+#include <uthread/exception.hpp>
 
 namespace uthread {
 namespace detail {
@@ -61,6 +62,11 @@ TEST(TaskTest, PushAndPop) {
   ASSERT_EQ(queue.pop().get(), ap);
   ASSERT_EQ(queue.pop().get(), bp);
   ASSERT_FALSE(queue.pop());
+}
+
+TEST(TaskTest, DeathOnException) {
+  auto a = Task::make([]() { throw Exception{"Halp"}; });
+  ASSERT_DEATH(Task::jumpToTask(std::move(a)), "Halp");
 }
 
 }  // namespace detail
