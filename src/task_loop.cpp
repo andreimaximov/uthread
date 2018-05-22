@@ -28,10 +28,7 @@ void TaskLoop::runLoop() {
 }
 
 void TaskLoop::suspendTask(detail::TaskQueue& queue) {
-  auto taskLoop = TaskLoop::current();
-  assert(taskLoop);
-
-  auto goTo = taskLoop->readyTasks_.pop();
+  auto goTo = currentSafe().readyTasks_.pop();
   if (UTHREAD_UNLIKELY(!goTo)) {
     throw Exception{"Suspending task causes deadlock."};
   }
@@ -39,9 +36,21 @@ void TaskLoop::suspendTask(detail::TaskQueue& queue) {
   detail::Task::swapToTask(std::move(goTo), queue);
 }
 
+void TaskLoop::resumeTask(std::unique_ptr<detail::Task> task) {
+  currentSafe().readyTasks_.push(std::move(task));
+}
+
 TaskLoop*& TaskLoop::current() {
   static TaskLoop* taskLoop = nullptr;
   return taskLoop;
+}
+
+TaskLoop& TaskLoop::currentSafe() {
+  auto taskLoop = current();
+  if (UTHREAD_UNLIKELY(!taskLoop)) {
+    throw Exception{"Task loop not running."};
+  }
+  return *taskLoop;
 }
 
 }  // namespace uthread

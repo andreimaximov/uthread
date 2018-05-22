@@ -25,6 +25,7 @@ libsrcs = [
     'src/exception.cpp',
     'src/task.cpp',
     'src/task_loop.cpp',
+    'src/task_queue.cpp',
 ]
 
 arch_defs = {
@@ -63,6 +64,7 @@ if gtest.found() and gmock.found()
             'test/detail/function.cpp',
             'test/detail/task.cpp',
             'test/task.cpp',
+            'test/task_queue.cpp',
         ],
         dependencies : [gtest, gmock],
         include_directories : incdirs,

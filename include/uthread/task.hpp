@@ -2,9 +2,7 @@
 
 #include <memory>
 
-#include <uthread/detail/likely.hpp>
 #include <uthread/detail/task.hpp>
-#include <uthread/exception.hpp>
 #include <uthread/task_loop.hpp>
 
 namespace uthread {
@@ -19,19 +17,15 @@ class Task {
   // You can only create tasks from within the task loop.
   template <typename F>
   Task(F&& f) {
-    auto taskLoop = TaskLoop::current();
-    if (UTHREAD_UNLIKELY(!taskLoop)) {
-      throw Exception{"Tasks can only be created inside a task loop."};
-    }
-
     auto joinQueue = std::make_shared<detail::TaskQueue>();
-    taskLoop->addTask([f{std::move(f)}, taskLoop, joinQueue]() {
+
+    TaskLoop::currentSafe().addTask([f{std::move(f)}, joinQueue]() {
       auto fNoThrow = [&f]() noexcept { f(); };
       fNoThrow();
 
       // Resume all joined tasks.
       while (auto task = joinQueue->pop()) {
-        taskLoop->readyTasks_.push(std::move(task));
+        TaskLoop::resumeTask(std::move(task));
       }
     });
 

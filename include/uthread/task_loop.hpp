@@ -23,11 +23,17 @@ class TaskLoop {
   // exception is thrown.
   static void suspendTask(detail::TaskQueue& queue);
 
+  // Schedule the task to resume execution.
+  static void resumeTask(std::unique_ptr<detail::Task> task);
+
   static TaskLoop*& current();
+
+  static TaskLoop& currentSafe();
 
   detail::TaskQueue readyTasks_;
 
   friend class Task;
+  friend class TaskQueue;
 };
 
 }  // namespace uthread
