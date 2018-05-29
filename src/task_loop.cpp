@@ -17,6 +17,8 @@ void runLoopNoThrow(detail::TaskQueue& tasks) noexcept {
 
 }  // namespace
 
+TaskLoop::TaskLoop(Options options) : options_{options} {}
+
 void TaskLoop::runLoop() {
   if (TaskLoop::current()) {
     throw Exception{"Task loop is already running."};

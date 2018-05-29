@@ -1,17 +1,21 @@
 #pragma once
 
 #include <uthread/detail/task.hpp>
+#include <uthread/options.hpp>
 
 namespace uthread {
 
 // A loop for scheduling tasks to run.
 class TaskLoop {
  public:
+  TaskLoop(Options options = Options{});
+
   // Schedule a task to run. This can be called both from outside or inside of
   // the loop.
   template <typename F>
   void addTask(F&& f) {
-    readyTasks_.push(detail::Task::make(std::forward<F>(f)));
+    readyTasks_.push(
+        detail::Task::make(std::forward<F>(f), options_.stackSize));
   }
 
   // Run all scheduled tasks and return once complete.
@@ -31,6 +35,7 @@ class TaskLoop {
   static TaskLoop& currentSafe();
 
   detail::TaskQueue readyTasks_;
+  const Options options_;
 
   friend class Task;
   friend class TaskQueue;
