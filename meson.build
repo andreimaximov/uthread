@@ -81,6 +81,7 @@ if benchmark.found()
             'bench/main.cpp',
             'bench/detail/context.cpp',
             'bench/detail/task.cpp',
+            'bench/task.cpp',
         ],
         dependencies : [benchmark, threads],
         include_directories : incdirs,
