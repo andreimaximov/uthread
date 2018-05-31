@@ -1,7 +1,5 @@
 #include <uthread/task_loop.hpp>
 
-#include <cassert>
-
 #include <uthread/detail/likely.hpp>
 #include <uthread/exception.hpp>
 
@@ -20,13 +18,14 @@ void runLoopNoThrow(detail::TaskQueue& tasks) noexcept {
 TaskLoop::TaskLoop(Options options) : options_{options} {}
 
 void TaskLoop::runLoop() {
-  if (TaskLoop::current()) {
+  TaskLoop*& taskLoop = TaskLoop::current();
+  if (taskLoop) {
     throw Exception{"Task loop is already running."};
   }
 
-  TaskLoop::current() = this;
+  taskLoop = this;
   runLoopNoThrow(readyTasks_);
-  TaskLoop::current() = nullptr;
+  taskLoop = nullptr;
 }
 
 void TaskLoop::suspendTask(detail::TaskQueue& queue) {

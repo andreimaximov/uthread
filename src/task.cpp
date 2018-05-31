@@ -1,7 +1,6 @@
 #include <uthread/task.hpp>
 
-#include <cassert>
-
+#include <uthread/detail/likely.hpp>
 #include <uthread/task_loop.hpp>
 
 namespace uthread {
@@ -17,8 +16,6 @@ Task& Task::operator=(Task&& task) {
 }
 
 void Task::join() {
-  assert(TaskLoop::current());
-
   auto joinQueue = joinQueue_.lock();
   if (!joinQueue) {
     // Task has finished.
@@ -35,7 +32,7 @@ void Task::yield() {
   }
 
   auto goTo = taskLoop->readyTasks_.pop();
-  if (goTo) {
+  if (UTHREAD_LIKELY(!!goTo)) {
     detail::Task::swapToTask(std::move(goTo), taskLoop->readyTasks_);
   }
 }
