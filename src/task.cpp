@@ -22,19 +22,22 @@ void Task::join() {
     return;
   }
 
-  TaskLoop::suspendTask(*joinQueue);
+  TaskLoop::current()->suspendTask(*joinQueue);
 }
 
 void Task::yield() {
   auto taskLoop = TaskLoop::current();
-  if (!taskLoop) {
-    return;
+  if (UTHREAD_LIKELY(!!taskLoop)) {
+    taskLoop->yieldTask();
   }
+}
 
-  auto goTo = taskLoop->readyTasks_.pop();
-  if (UTHREAD_LIKELY(!!goTo)) {
-    detail::Task::swapToTask(std::move(goTo), taskLoop->readyTasks_);
-  }
+Events Task::sleep(int fd, Events events) {
+  auto taskLoop = TaskLoop::current();
+  auto fired = static_cast<Events>(detail::Task::sleepAndSwapToTask(
+      fd, static_cast<short>(events), nullptr, taskLoop->evb_.get(),
+      taskLoop->getNextTask(), taskLoop->readyTasks_));
+  return fired;
 }
 
 }  // namespace uthread

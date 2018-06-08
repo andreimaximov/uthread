@@ -11,11 +11,15 @@ Vagrant.configure("2") do |config|
   sudo apt-get update
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
         arping                                             \
+        autoconf                                           \
+        autogen                                            \
         build-essential                                    \
         clang-format                                       \
         cmake                                              \
         gdb                                                \
+        libtool                                            \
         ninja-build                                        \
+        pkg-config                                         \
         python3                                            \
         python3-pip                                        \
         python3-setuptools                                 \
@@ -25,6 +29,14 @@ Vagrant.configure("2") do |config|
         wget
 
     sudo pip3 install meson
+
+    cd /tmp &&                                                                        \
+        wget https://github.com/libevent/libevent/archive/release-2.1.8-stable.zip && \
+        unzip -q release-2.1.8-stable.zip &&                                          \
+        cd libevent-release-2.1.8-stable &&                                           \
+        ./autogen.sh &&                                                               \
+        ./configure &&                                                                \
+        sudo make -j $(nproc) install
 
     cd /tmp &&                                                                 \
         wget https://github.com/gflags/gflags/archive/v2.2.2.zip &&            \

@@ -10,6 +10,20 @@ namespace {
 thread_local Context returnTo;
 thread_local std::unique_ptr<Task> currentTask = nullptr;
 
+struct Trampoline {
+  TaskQueue sleepQueue;
+  TaskQueue& wakeQueue;
+  int events;
+};
+
+static void callbackLibEvent(evutil_socket_t, short events, void* trampoline_) {
+  auto trampoline = reinterpret_cast<Trampoline*>(trampoline_);
+  trampoline->events = events;
+  auto task = trampoline->sleepQueue.pop();
+  assert(task);
+  trampoline->wakeQueue.push(std::move(task));
+}
+
 }  // namespace
 
 void Task::swapToTask(std::unique_ptr<Task> task, TaskQueue& queue) {
@@ -28,6 +42,23 @@ void Task::jumpToTask(std::unique_ptr<Task> task) {
 
   currentTask = std::move(task);
   contextSwap(returnTo, currentTask->context_);
+}
+
+short Task::sleepAndSwapToTask(int fd, short events, timeval* timeout,
+                               event_base* evb, std::unique_ptr<Task> task,
+                               TaskQueue& queue) {
+  assert(evb);
+  assert(task);
+  assert(currentTask);
+
+  Trampoline trampoline{{}, queue, 0};
+
+  auto ev = reinterpret_cast<event*>(currentTask->event_.get());
+  event_assign(ev, evb, fd, events, callbackLibEvent, &trampoline);
+  event_add(ev, timeout);
+
+  swapToTask(std::move(task), trampoline.sleepQueue);
+  return trampoline.events;
 }
 
 void Task::runTask() {
@@ -57,6 +88,10 @@ std::unique_ptr<Task> TaskQueue::pop() {
     }
   }
   return task;
+}
+
+bool TaskQueue::hasTasks() const {
+  return !!head_;
 }
 
 }  // namespace detail

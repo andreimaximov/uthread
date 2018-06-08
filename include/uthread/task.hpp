@@ -1,8 +1,12 @@
 #pragma once
 
+#include <chrono>
 #include <memory>
 
+#include <sys/time.h>
+
 #include <uthread/detail/task.hpp>
+#include <uthread/events.hpp>
 #include <uthread/task_loop.hpp>
 
 namespace uthread {
@@ -17,15 +21,16 @@ class Task {
   // You can only create tasks from within the task loop.
   template <typename F>
   Task(F&& f) {
+    auto taskLoop = TaskLoop::current();
     auto joinQueue = std::make_shared<detail::TaskQueue>();
 
-    TaskLoop::currentSafe().addTask([f{std::move(f)}, joinQueue]() {
+    taskLoop->addTask([f{std::move(f)}, taskLoop, joinQueue]() {
       auto fNoThrow = [&f]() noexcept { f(); };
       fNoThrow();
 
       // Resume all joined tasks.
       while (auto task = joinQueue->pop()) {
-        TaskLoop::resumeTask(std::move(task));
+        taskLoop->resumeTask(std::move(task));
       }
     });
 
@@ -53,6 +58,29 @@ class Task {
   // Yield execution of the current task to another. Return immediately if there
   // are no other runnable tasks.
   static void yield();
+
+  // Sleep the current task until an event fires on the file descriptor.
+  //
+  // Return the fired events.
+  static Events sleep(int fd, Events events);
+
+  // Sleep the current task for the specified duration.
+  template <typename R, typename P>
+  static void sleep(std::chrono::duration<R, P> duration) {
+    auto taskLoop = TaskLoop::current();
+
+    auto durationS = std::chrono::duration_cast<std::chrono::seconds>(duration);
+    auto durationUs = std::chrono::duration_cast<std::chrono::microseconds>(
+        duration - durationS);
+
+    timeval durationTv;
+    durationTv.tv_sec = durationS.count();
+    durationTv.tv_usec = durationUs.count();
+
+    detail::Task::sleepAndSwapToTask(
+        -1, EV_TIMEOUT, &durationTv, taskLoop->evb_.get(),
+        taskLoop->getNextTask(), taskLoop->readyTasks_);
+  }
 
  private:
   std::weak_ptr<detail::TaskQueue> joinQueue_;

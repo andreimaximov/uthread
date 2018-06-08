@@ -5,7 +5,7 @@
 namespace uthread {
 
 void TaskQueue::park() {
-  TaskLoop::suspendTask(queue_);
+  TaskLoop::current()->suspendTask(queue_);
 }
 
 bool TaskQueue::unpark() {
@@ -13,7 +13,7 @@ bool TaskQueue::unpark() {
   if (!task) {
     return false;
   }
-  TaskLoop::resumeTask(std::move(task));
+  TaskLoop::current()->resumeTask(std::move(task));
   return true;
 }
 

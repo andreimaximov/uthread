@@ -97,6 +97,22 @@ TEST(TaskTest, JoinOnFinishedTask) {
   ASSERT_EQ(x, 2);
 }
 
+TEST(TaskTest, Sleep) {
+  TaskLoop taskLoop;
+
+  taskLoop.addTask([]() { Task::sleep(std::chrono::milliseconds{200}); });
+
+  auto beginAt = std::chrono::steady_clock::now();
+  taskLoop.runLoop();
+  auto endAt = std::chrono::steady_clock::now();
+
+  auto runMs =
+      std::chrono::duration_cast<std::chrono::milliseconds>(endAt - beginAt)
+          .count();
+  ASSERT_GE(runMs, 190);
+  ASSERT_LE(runMs, 210);
+}
+
 TEST(TaskTest, NextTaskOnFinish) {
   int x = 0;
 
@@ -134,18 +150,6 @@ TEST(TaskTest, CleanupOnFinish) {
   taskLoop.runLoop();
 
   ASSERT_EQ(x.use_count(), 2);
-}
-
-TEST(TaskTest, ExceptionOnDeadlock) {
-  Task a;
-  Task b;
-
-  TaskLoop taskLoop;
-  taskLoop.addTask([&a, &b]() {
-    a = Task{[&b]() { b.join(); }};
-    b = Task{[&a]() { ASSERT_THROW(a.join(), Exception); }};
-  });
-  taskLoop.runLoop();
 }
 
 }  // namespace uthread

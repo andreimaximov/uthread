@@ -64,6 +64,17 @@ TEST(TaskTest, PushAndPop) {
   ASSERT_FALSE(queue.pop());
 }
 
+TEST(TaskTest, HasTasks) {
+  TaskQueue queue;
+  ASSERT_FALSE(queue.hasTasks());
+
+  queue.push(Task::make([]() {}));
+  ASSERT_TRUE(queue.hasTasks());
+
+  queue.pop();
+  ASSERT_FALSE(queue.hasTasks());
+}
+
 TEST(TaskTest, DeathOnException) {
   auto a = Task::make([]() { throw Exception{"Halp"}; });
   ASSERT_DEATH(Task::jumpToTask(std::move(a)), "Halp");

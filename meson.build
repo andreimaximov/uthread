@@ -9,6 +9,7 @@ project(
     version : '0.0.1',
 )
 
+libevent = dependency('libevent')
 threads = dependency('threads')
 benchmark = dependency('benchmark', required : false)
 gflags = dependency('gflags', required : false)
@@ -51,6 +52,7 @@ endif
 lib = library(
     'uthread',
     libsrcs,
+    dependencies : [libevent],
     include_directories : incdirs,
     install : true,
 )
@@ -65,8 +67,9 @@ if gtest.found() and gmock.found()
             'test/detail/task.cpp',
             'test/task.cpp',
             'test/task_queue.cpp',
+            'test/events.cpp',
         ],
-        dependencies : [gtest, gmock],
+        dependencies : [libevent, gtest, gmock],
         include_directories : incdirs,
         link_with : lib,
     )
@@ -83,7 +86,7 @@ if benchmark.found()
             'bench/detail/task.cpp',
             'bench/task.cpp',
         ],
-        dependencies : [benchmark, threads],
+        dependencies : [libevent, threads, benchmark],
         include_directories : incdirs,
         link_with : lib,
     )

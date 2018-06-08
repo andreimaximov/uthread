@@ -1,5 +1,9 @@
 #pragma once
 
+#include <memory>
+
+#include <event2/event.h>
+
 #include <uthread/detail/task.hpp>
 #include <uthread/options.hpp>
 
@@ -14,8 +18,13 @@ class TaskLoop {
   // the loop.
   template <typename F>
   void addTask(F&& f) {
-    readyTasks_.push(
-        detail::Task::make(std::forward<F>(f), options_.stackSize));
+    readyTasks_.push(detail::Task::make(
+        [f{std::forward<F>(f)}]() {
+          f();
+          TaskLoop::current()->outstandingTasks_--;
+        },
+        options_.stackSize));
+    outstandingTasks_++;
   }
 
   // Run all scheduled tasks and return once complete.
@@ -25,17 +34,25 @@ class TaskLoop {
   // Suspend the current executing task by saving it on the queue. The loop will
   // switch to the next available task. If no tasks are ready to run, an
   // exception is thrown.
-  static void suspendTask(detail::TaskQueue& queue);
+  void suspendTask(detail::TaskQueue& queue);
 
   // Schedule the task to resume execution.
-  static void resumeTask(std::unique_ptr<detail::Task> task);
+  void resumeTask(std::unique_ptr<detail::Task> task);
 
-  static TaskLoop*& current();
+  // Swap out the current executing task if another ready tasks exists.
+  void yieldTask();
 
-  static TaskLoop& currentSafe();
+  // Return the next schedule task.
+  std::unique_ptr<detail::Task> getNextTask();
+
+  // Return the current executing loop. Throw an exception if no loop is
+  // currently executing.
+  static TaskLoop* current();
 
   detail::TaskQueue readyTasks_;
   const Options options_;
+  std::size_t outstandingTasks_ = 0;
+  std::shared_ptr<event_base> evb_;
 
   friend class Task;
   friend class TaskQueue;

@@ -4,6 +4,7 @@
 
 ## Dependencies
 
+- [libevent](https://github.com/libevent/libevent)
 - [benchmark](https://github.com/google/benchmark)
 - [gflags](https://github.com/gflags/gflags)
 - [googletest](https://github.com/google/googletest)

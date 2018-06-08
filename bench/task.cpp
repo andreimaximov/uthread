@@ -6,7 +6,9 @@
 namespace uthread {
 
 // This benchmarks the estimated cost of yield from one task to another and
-// back.
+// back. The task loop actually spawns one more task for the event base loop
+// which we end up switching to during this cycle so this benchmarks not 2
+// yields, but 3.
 static void benchTaskYield(benchmark::State& state) {
   auto done = false;
   TaskLoop taskLoop;
