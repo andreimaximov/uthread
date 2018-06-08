@@ -66,6 +66,7 @@ if gtest.found() and gmock.found()
             'test/detail/function.cpp',
             'test/detail/task.cpp',
             'test/task.cpp',
+            'test/task_loop.cpp',
             'test/task_queue.cpp',
             'test/events.cpp',
         ],
