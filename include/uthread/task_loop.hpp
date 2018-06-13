@@ -14,14 +14,19 @@ class TaskLoop {
  public:
   TaskLoop(Options options = Options{});
 
+  TaskLoop(const TaskLoop&) = delete;
+  TaskLoop(TaskLoop&&) = delete;
+  TaskLoop& operator=(const TaskLoop&) = delete;
+  TaskLoop& operator=(TaskLoop&&) = delete;
+
   // Schedule a task to run. This can be called both from outside or inside of
   // the loop.
   template <typename F>
   void addTask(F&& f) {
     readyTasks_.push(detail::Task::make(
-        [f{std::forward<F>(f)}]() {
+        [this, f{std::forward<F>(f)}]() {
           f();
-          TaskLoop::current()->outstandingTasks_--;
+          outstandingTasks_--;
         },
         options_.stackSize));
     outstandingTasks_++;
