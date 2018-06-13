@@ -95,4 +95,23 @@ if benchmark.found()
     benchmark('bench', bench)
 endif
 
+example_defs = {
+    'helloworld' : 'examples/helloworld.cpp',
+}
+
+example_exes = []
+
+if gflags.found()
+    foreach name, cpp : example_defs
+        example_exes += executable(
+            name,
+            [cpp],
+            dependencies : [libevent, gflags],
+            include_directories : incdirs,
+            link_with : lib,
+        )
+    endforeach
+endif
+
+run_target('smoke', command : ['scripts/smoke.py', '-v'], depends : example_exes)
 run_target('format', command : 'scripts/clang-format.sh')
