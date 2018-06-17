@@ -69,6 +69,7 @@ if gtest.found() and gmock.found()
             'test/task_loop.cpp',
             'test/task_queue.cpp',
             'test/events.cpp',
+            'test/mpmc_queue.cpp',
         ],
         dependencies : [libevent, gtest, gmock],
         include_directories : incdirs,

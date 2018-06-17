@@ -2,6 +2,7 @@
 
 #include <uthread/events.hpp>
 #include <uthread/exception.hpp>
+#include <uthread/mpmc_queue.hpp>
 #include <uthread/options.hpp>
 #include <uthread/task.hpp>
 #include <uthread/task_loop.hpp>
