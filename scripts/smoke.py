@@ -1,24 +1,16 @@
 #!/usr/bin/env python3
 
+import contextlib
 import os
+import random
+import socket
+import string
 import subprocess
+import time
 import unittest
 
 
-class SubprocessError(Exception):
-    def __init__(self, subprocess_err):
-        self._subprocess_err = subprocess_err
-
-    def __str__(self):
-        stdout = self._subprocess_err.stdout
-        stderr = self._subprocess_err.stderr
-        return 'err: {}, stdout: {}, stderr: {}'.format(
-            self._subprocess_err,
-            str(stdout, 'ascii') if stdout is not None else '',
-            str(stderr, 'ascii') if stderr is not None else '')
-
-
-def example(name):
+def pathToExample(name):
     build = os.getenv('MESON_BUILD_ROOT', os.getcwd())
     example = os.path.join(build, name)
     if not os.path.exists(example):
@@ -26,17 +18,29 @@ def example(name):
     return example
 
 
-def check(command):
+@contextlib.contextmanager
+def runSubprocess(command):
+    process = subprocess.Popen(
+        command,
+        stdin=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        universal_newlines=True,
+    )
     try:
-        out = subprocess.run(
-            command,
-            check=True,
-            stderr=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            timeout=10).stdout
-        return str(out, 'ascii')
-    except subprocess.CalledProcessError as e:
-        raise SubprocessError(e)
+        yield process
+    finally:
+        process.kill()
+        process.wait()
+
+
+def runAndCheck(command, stdin=None):
+    with runSubprocess(command) as p:
+        return p.communicate(stdin)[0]
+
+
+def randomStr(n):
+    return ''.join(random.choice(string.ascii_lowercase) for _ in range(n))
 
 
 class SmokeTest(unittest.TestCase):
@@ -45,9 +49,31 @@ class SmokeTest(unittest.TestCase):
     These should be run via ninja smoke from your meson build directory.
     '''
 
-    def test_helloworld(self):
-        stdout = check(example('helloworld'))
+    def testHelloWorld(self):
+        stdout = runAndCheck(pathToExample('helloworld'))
         self.assertEqual(stdout, 'Hello... World!\n')
+
+    def testTcpEcho(self):
+        with runSubprocess([pathToExample('tcpecho'), '--tasks', '128']):
+            time.sleep(1)
+
+            sockets = []
+            try:
+                for _ in range(128):
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.connect(('127.0.0.1', 8000))
+                    message = bytes(randomStr(1024), 'ascii')
+                    sockets.append((s, message))
+
+                for s, message in sockets:
+                    s.sendall(message)
+
+                for s, message in sockets:
+                    echo = s.recv(1025)
+                    self.assertEqual(echo, message)
+            finally:
+                for s, _ in sockets:
+                    s.close()
 
 
 if __name__ == '__main__':

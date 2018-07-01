@@ -23,10 +23,13 @@ install_subdir('include/cpp', install_dir : get_option('includedir'))
 libsrcs = [
     'src/detail/context.cpp',
     'src/detail/task.cpp',
+    'src/detail/task_fd.cpp',
     'src/exception.cpp',
     'src/task.cpp',
     'src/task_loop.cpp',
     'src/task_queue.cpp',
+    'src/tcp_listener.cpp',
+    'src/tcp_stream.cpp',
 ]
 
 arch_defs = {
@@ -65,11 +68,13 @@ if gtest.found() and gmock.found()
             'test/detail/context.cpp',
             'test/detail/function.cpp',
             'test/detail/task.cpp',
+            'test/detail/task_fd.cpp',
             'test/task.cpp',
             'test/task_loop.cpp',
             'test/task_queue.cpp',
             'test/events.cpp',
             'test/mpmc_queue.cpp',
+            'test/socket_addr.cpp',
         ],
         dependencies : [libevent, gtest, gmock],
         include_directories : incdirs,
@@ -98,6 +103,7 @@ endif
 
 example_defs = {
     'helloworld' : 'examples/helloworld.cpp',
+    'tcpecho'    : 'examples/tcpecho.cpp',
 }
 
 example_exes = []
@@ -107,7 +113,7 @@ if gflags.found()
         example_exes += executable(
             name,
             [cpp],
-            dependencies : [libevent, gflags],
+            dependencies : [libevent, threads, gflags],
             include_directories : incdirs,
             link_with : lib,
         )

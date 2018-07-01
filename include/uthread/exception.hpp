@@ -10,10 +10,14 @@ class Exception : public std::exception {
   // be static data to avoid a dangling pointer.
   Exception(const char* message);
 
+  // Return an exception with a message based on errno.
+  static Exception fromErrNo();
+
   const char* what() const noexcept override;
 
  private:
   const char* message_ = nullptr;
+  char buf_[64];
 };
 
 }  // namespace uthread
