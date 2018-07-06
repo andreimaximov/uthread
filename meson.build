@@ -103,6 +103,7 @@ endif
 
 example_defs = {
     'helloworld' : 'examples/helloworld.cpp',
+    'tcpchat'    : 'examples/tcpchat.cpp',
     'tcpecho'    : 'examples/tcpecho.cpp',
 }
 

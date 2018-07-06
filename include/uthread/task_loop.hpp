@@ -24,7 +24,7 @@ class TaskLoop {
   template <typename F>
   void addTask(F&& f) {
     readyTasks_.push(detail::Task::make(
-        [this, f{std::forward<F>(f)}]() {
+        [this, f{std::forward<F>(f)}]() mutable {
           f();
           outstandingTasks_--;
         },

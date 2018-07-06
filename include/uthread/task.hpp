@@ -24,7 +24,7 @@ class Task {
     auto taskLoop = TaskLoop::current();
     auto joinQueue = std::make_shared<detail::TaskQueue>();
 
-    taskLoop->addTask([f{std::move(f)}, taskLoop, joinQueue]() {
+    taskLoop->addTask([f{std::move(f)}, taskLoop, joinQueue]() mutable {
       auto fNoThrow = [&f]() noexcept { f(); };
       fNoThrow();
 

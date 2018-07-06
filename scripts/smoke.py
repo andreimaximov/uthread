@@ -75,6 +75,71 @@ class SmokeTest(unittest.TestCase):
                 for s, _ in sockets:
                     s.close()
 
+    def testTcpChat(self):
+        def readMessage(s):
+            return [
+                s for s in str(s.recv(1024), 'ascii').split('\n') if len(s) > 0
+            ]
+
+        def sendMessage(s, message):
+            s.sendall(bytes(message + '\n', 'ascii'))
+            time.sleep(0.1)
+            return readMessage(s)
+
+        with runSubprocess([pathToExample('tcpchat')]):
+            time.sleep(1)
+
+            socketX, socketY, messagesX, messagesY = None, None, [], []
+
+            try:
+                socketX = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                socketY = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                socketX.connect(('127.0.0.1', 8000))
+                time.sleep(0.1)
+                socketY.connect(('127.0.0.1', 8000))
+                time.sleep(0.1)
+
+                messagesX += sendMessage(socketX, '0')
+                messagesX += sendMessage(socketX, '1')
+                messagesY += sendMessage(socketY, '2')
+                messagesX += sendMessage(socketX, '3')
+                messagesX += sendMessage(socketX, '4')
+                messagesX += sendMessage(socketX, '5')
+                messagesY += sendMessage(socketY, '6')
+                messagesX += sendMessage(socketX, '7')
+                messagesY += sendMessage(socketY, '8')
+                messagesY += sendMessage(socketY, '9')
+
+                messagesX += readMessage(socketX)
+                socketX.close()
+                socketX = None
+                time.sleep(0.1)
+                messagesY += readMessage(socketY)
+
+            finally:
+                if socketX is not None:
+                    socketX.close()
+                if socketY is not None:
+                    socketY.close()
+
+            messages = [
+                'Anonymous Iguana: <Joined>',
+                'Anonymous Turtle: <Joined>',
+                'Anonymous Iguana: 0',
+                'Anonymous Iguana: 1',
+                'Anonymous Turtle: 2',
+                'Anonymous Iguana: 3',
+                'Anonymous Iguana: 4',
+                'Anonymous Iguana: 5',
+                'Anonymous Turtle: 6',
+                'Anonymous Iguana: 7',
+                'Anonymous Turtle: 8',
+                'Anonymous Turtle: 9',
+                'Anonymous Iguana: <Left>',
+            ]
+            self.assertEqual(messagesX, messages[:-1])
+            self.assertEqual(messagesY, messages[1:])
+
 
 if __name__ == '__main__':
     unittest.main()
