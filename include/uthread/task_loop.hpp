@@ -37,8 +37,7 @@ class TaskLoop {
 
  private:
   // Suspend the current executing task by saving it on the queue. The loop will
-  // switch to the next available task. If no tasks are ready to run, an
-  // exception is thrown.
+  // switch to the next available task.
   void suspendTask(detail::TaskQueue& queue);
 
   // Schedule the task to resume execution.
