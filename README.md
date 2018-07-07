@@ -1,6 +1,6 @@
 # README
 
-*uthread* is a lightweight fiber library I wrote just for fun. It is inspired by [Boost.fiber](https://github.com/boostorg/fiber) and [folly fibers](https://github.com/facebook/folly/tree/master/folly/fibers).
+*uthread* is a lightweight fiber library I wrote just for fun. It was inspired by [Boost.fiber](https://github.com/boostorg/fiber) and [folly fibers](https://github.com/facebook/folly/tree/master/folly/fibers) and can achieve **30 million task switches/second**.
 
 ## API
 
@@ -36,6 +36,10 @@ int main() {
 
 We have more examples available [here](examples). See [Building](#building) to see how to compile the examples. Once compiled, you can run the examples from the `build` directory.
 
+## Design
+
+*uthread* is designed around an N:1 (task:thread) model. A [TaskLoop](include/uthread/task_loop.hpp) is responsible for multiplexing a set of tasks on top of a thread. This includes sleeping and waking threads waiting on asynchronous IO notifications courtesy of [libevent](https://github.com/libevent). The [TaskQueue](include/uthread/task_queue.hpp) forms the basis of building task scheduling and synchronization primitives such as [MpmcQueue](include/uthread/mpmc_queue.hpp).
+
 ## Dependencies
 
 - [libevent](https://github.com/libevent/libevent)
@@ -60,4 +64,19 @@ Some special targets are provided:
 - **format:** Runs `clang-format` on the source
 
 A dev VM w/a build environment is provided. Just `vagrant up && vagrant ssh`.
+
+## Examples
+
+- [test/task.cpp](test/task.cpp) for using the Task API
+- [test/task_queue.cpp](test/task_queue.cpp) for using the TaskQueue API
+- [examples/tcpecho.cpp](examples/tcpecho.cpp) for a TCP echo server
+- [examples/tcpchat.cpp](examples/tcpchat.cpp) for a TCP chat server
+
+## Reading
+
+The following are good reads on memory models, compiler/hardware instruction reordering, etc that are important to understand in concurrent environments. *uthread* multiplexes tasks on top of a single thread so most of this is not immediately relevant but still useful for understanding what kind of compiler optimizations might occur around context switches. Despite *thinking* I understand this stuff, I wouldn't be surprised if *uthreads* has bugs related to these topics :)
+
+- [Memory Ordering at Compile Time](http://preshing.com/20120625/memory-ordering-at-compile-time/)
+- [Memory Reordering Caught in the Act](http://preshing.com/20120515/memory-reordering-caught-in-the-act/)
+- [Is memory reordering visible to other threads on a uniprocessor?](https://stackoverflow.com/questions/14182066/is-memory-reordering-visible-to-other-threads-on-a-uniprocessor)
 
