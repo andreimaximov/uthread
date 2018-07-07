@@ -31,12 +31,17 @@ def runSubprocess(command):
         yield process
     finally:
         process.kill()
-        process.wait()
+        process.communicate()
 
 
 def runAndCheck(command, stdin=None):
-    with runSubprocess(command) as p:
-        return p.communicate(stdin)[0]
+    return subprocess.Popen(
+        command,
+        stdin=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        universal_newlines=True,
+    ).communicate()[0]
 
 
 def randomStr(n):
