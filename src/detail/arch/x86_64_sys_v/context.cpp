@@ -11,9 +11,9 @@ namespace detail {
 void contextMake(Context& context, void* stack, std::size_t stackSize,
                  void (*f)()) {
   if (UTHREAD_UNLIKELY(stack == nullptr)) {
-    throw Exception{"Context stack cannot be a nullptr."};
+    throw Exception{"Context: Stack cannot be a nullptr."};
   } else if (UTHREAD_UNLIKELY(f == nullptr)) {
-    throw Exception{"Context function cannot be a nullptr."};
+    throw Exception{"Context: Function cannot be a nullptr."};
   } else if (UTHREAD_UNLIKELY(stackSize < kMinStackSize)) {
     stackSize = kMinStackSize;
   }

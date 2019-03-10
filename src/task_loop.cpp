@@ -23,22 +23,22 @@ std::shared_ptr<event_base> makeEvb(const Options& options) {
   if (auto conf = event_config_new()) {
     config = std::shared_ptr<event_config>{conf, event_config_free};
   } else {
-    throw Exception{"LibEvent: Error making config."};
+    throw Exception{"Libevent: Error making config."};
   }
 
   if (event_config_set_flag(config.get(), EVENT_BASE_FLAG_NOLOCK)) {
-    throw Exception{"LibEvent: Error disabling locking."};
+    throw Exception{"Libevent: Error disabling locking."};
   }
 
   if (options.timer == Options::Timer::Fast &&
       event_config_set_flag(config.get(), EVENT_BASE_FLAG_PRECISE_TIMER)) {
-    throw Exception{"LibEvent: Error enabling precise timer."};
+    throw Exception{"Libevent: Error enabling precise timer."};
   }
 
   if (auto evb = event_base_new_with_config(config.get())) {
     return std::shared_ptr<event_base>{evb, event_base_free};
   } else {
-    throw Exception{"LibEvent: Error making event base."};
+    throw Exception{"Libevent: Error making event base."};
   }
 }
 
@@ -49,7 +49,7 @@ TaskLoop::TaskLoop(Options options)
 
 void TaskLoop::runLoop() {
   if (taskLoop) {
-    throw Exception{"Task loop is already running."};
+    throw Exception{"TaskLoop: Already running."};
   }
 
   addTask([this]() {
@@ -58,7 +58,7 @@ void TaskLoop::runLoop() {
       // Are any tasks ready to run now? In such a case, don't block.
       auto flags = readyTasks_.hasTasks() ? EVLOOP_NONBLOCK : EVLOOP_ONCE;
       if (event_base_loop(evb_.get(), flags) == -1) {
-        throw Exception{"Event base loop encountered an error."};
+        throw Exception{"TaskLoop: Libevent encountered an error. "};
       }
       Task::yield();
     }
@@ -90,7 +90,7 @@ std::unique_ptr<detail::Task> TaskLoop::getNextTask() {
 
 TaskLoop* TaskLoop::current() {
   if (UTHREAD_UNLIKELY(!taskLoop)) {
-    throw Exception{"Task loop not running."};
+    throw Exception{"TaskLoop: Should be running but isn't."};
   }
   return taskLoop;
 }
