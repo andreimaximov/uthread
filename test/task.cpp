@@ -152,4 +152,17 @@ TEST(TaskTest, CleanupOnFinish) {
   ASSERT_EQ(x.use_count(), 2);
 }
 
+TEST(TaskTest, MutableLambda) {
+  int x = 0;
+
+  TaskLoop taskLoop;
+  taskLoop.addTask([&x, y{x}]() mutable {
+    y++;
+    x = y;
+  });
+  taskLoop.runLoop();
+
+  ASSERT_EQ(x, 1);
+}
+
 }  // namespace uthread
