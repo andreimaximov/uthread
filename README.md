@@ -1,6 +1,8 @@
 # README
 
-*uthread* is a lightweight fiber library I wrote just for fun. It was inspired by [Boost.fiber](https://github.com/boostorg/fiber) and [folly fibers](https://github.com/facebook/folly/tree/master/folly/fibers) and can achieve **30 million task switches/second**.
+*uthread* is a lightweight fiber library I wrote just for fun. It was inspired by [Boost.fiber](https://github.com/boostorg/fiber) and [folly fibers](https://github.com/facebook/folly/tree/master/folly/fibers) and can achieve **30 million task context switches/second**.
+
+[![Build Status](https://travis-ci.com/andreimaximov/uthread.svg?branch=master)](https://travis-ci.com/andreimaximov/uthread)
 
 ## API
 
