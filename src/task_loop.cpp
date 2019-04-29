@@ -30,7 +30,7 @@ std::shared_ptr<event_base> makeEvb(const Options& options) {
     throw Exception{"Libevent: Error disabling locking."};
   }
 
-  if (options.timer == Options::Timer::Fast &&
+  if (options.timer == Options::Timer::Precise &&
       event_config_set_flag(config.get(), EVENT_BASE_FLAG_PRECISE_TIMER)) {
     throw Exception{"Libevent: Error enabling precise timer."};
   }
