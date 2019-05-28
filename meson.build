@@ -22,6 +22,7 @@ install_subdir('include/cpp', install_dir : get_option('includedir'))
 
 libsrcs = [
     'src/detail/context.cpp',
+    'src/detail/stack.cpp',
     'src/detail/task.cpp',
     'src/detail/task_fd.cpp',
     'src/exception.cpp',
@@ -67,6 +68,7 @@ if gtest.found() and gmock.found()
             'test/main.cpp',
             'test/detail/context.cpp',
             'test/detail/function.cpp',
+            'test/detail/stack.cpp',
             'test/detail/task.cpp',
             'test/detail/task_fd.cpp',
             'test/task.cpp',
@@ -102,9 +104,10 @@ if benchmark.found()
 endif
 
 example_defs = {
-    'helloworld' : 'examples/helloworld.cpp',
-    'tcpchat'    : 'examples/tcpchat.cpp',
-    'tcpecho'    : 'examples/tcpecho.cpp',
+    'helloworld'    : 'examples/helloworld.cpp',
+    'stackoverflow' : 'examples/stackoverflow.cpp',
+    'tcpchat'       : 'examples/tcpchat.cpp',
+    'tcpecho'       : 'examples/tcpecho.cpp',
 }
 
 example_exes = []

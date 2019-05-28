@@ -9,6 +9,7 @@ namespace {
 
 thread_local Context returnTo;
 thread_local std::unique_ptr<Task> currentTask = nullptr;
+thread_local std::unique_ptr<Task> cleanupTask = nullptr;
 
 struct Trampoline {
   TaskQueue sleepQueue;
@@ -34,6 +35,10 @@ void Task::swapToTask(std::unique_ptr<Task> task, TaskQueue& queue) {
   queue.push(std::move(currentTask));
   currentTask = std::move(task);
   contextSwap(prevTask->context_, currentTask->context_);
+
+  if (cleanupTask) {
+    cleanupTask.reset();
+  }
 }
 
 void Task::jumpToTask(std::unique_ptr<Task> task) {
@@ -42,6 +47,10 @@ void Task::jumpToTask(std::unique_ptr<Task> task) {
 
   currentTask = std::move(task);
   contextSwap(returnTo, currentTask->context_);
+
+  if (cleanupTask) {
+    cleanupTask.reset();
+  }
 }
 
 short Task::sleepAndSwapToTask(int fd, short events, timeval* timeout,
@@ -63,7 +72,10 @@ short Task::sleepAndSwapToTask(int fd, short events, timeval* timeout,
 
 void Task::runTask() {
   currentTask->f_->call();
-  currentTask.reset();
+
+  // Careful here, do not destroy the stack yet while the context is still
+  // technically running. This can cause SIGSEGV or worse - UB!
+  cleanupTask = std::move(currentTask);
   contextJump(returnTo);
 }
 

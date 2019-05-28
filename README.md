@@ -73,6 +73,7 @@ A dev VM w/a build environment is provided. Just `vagrant up && vagrant ssh`.
 - [test/task_queue.cpp](test/task_queue.cpp) for using the TaskQueue API
 - [examples/tcpecho.cpp](examples/tcpecho.cpp) for a TCP echo server
 - [examples/tcpchat.cpp](examples/tcpchat.cpp) for a TCP chat server
+- [examples/stackoverflow.cpp](examples/stackoverflow.cpp) for enabling guard pages
 
 ## Reading
 

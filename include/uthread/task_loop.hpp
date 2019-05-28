@@ -28,7 +28,7 @@ class TaskLoop {
           f();
           outstandingTasks_--;
         },
-        options_.stackSize));
+        options_.stackSize, options_.useGuardPages));
     outstandingTasks_++;
   }
 

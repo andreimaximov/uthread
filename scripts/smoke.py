@@ -58,6 +58,10 @@ class SmokeTest(unittest.TestCase):
         stdout = runAndCheck(pathToExample('helloworld'))
         self.assertEqual(stdout, 'Hello... World!\n')
 
+    def testStackOverflow(self):
+        with runSubprocess(pathToExample('stackoverflow')) as process:
+            self.assertNotEqual(process.wait(), 0)
+
     def testTcpEcho(self):
         with runSubprocess([pathToExample('tcpecho'), '--tasks', '128']):
             time.sleep(1)

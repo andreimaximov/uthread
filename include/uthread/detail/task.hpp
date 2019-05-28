@@ -8,6 +8,7 @@
 
 #include <uthread/detail/context.hpp>
 #include <uthread/detail/function.hpp>
+#include <uthread/detail/stack.hpp>
 
 namespace uthread {
 namespace detail {
@@ -26,10 +27,11 @@ class Task {
   // finishes executing the context switches to the last main context which
   // called jumpToTask(...).
   template <typename F>
-  static std::unique_ptr<Task> make(F&& f, std::size_t stackSize = 16384) {
+  static std::unique_ptr<Task> make(F&& f, std::size_t stackSize = 16384,
+                                    bool useGuardPages = false) {
     std::unique_ptr<Task> task{new Task{}};
     task->f_ = makef(std::forward<F>(f));
-    task->stack_ = std::unique_ptr<char[]>{new char[stackSize]};
+    task->stack_ = makeStack(stackSize, useGuardPages);
 
     // Align event storage to 8 bytes since that's what malloc does on 64-bit
     // systems.
@@ -64,7 +66,7 @@ class Task {
 
   std::unique_ptr<FunctionBase> f_;
   std::unique_ptr<Task> next_;
-  std::unique_ptr<char[]> stack_;
+  std::shared_ptr<char> stack_;
   std::unique_ptr<double[]> event_;
   Context context_;
 
