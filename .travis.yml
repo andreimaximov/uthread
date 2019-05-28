@@ -6,6 +6,9 @@ dist:
 compiler:
   - gcc
   - clang
+env:
+  - SANITIZERS="address,undefined"
+  - SANITIZERS="none"
 install:
   - cd ${TRAVIS_BUILD_DIR}
   - ./scripts/install-deps.sh
@@ -13,7 +16,7 @@ script:
   - cd ${TRAVIS_BUILD_DIR}
   - meson build
   - cd build
-  - meson configure -Dbuildtype=release -Db_sanitize=address,undefined -Db_lundef=false # https://github.com/mesonbuild/meson/issues/3853
+  - meson configure -Dbuildtype=release -Db_sanitize=${SANITIZERS} -Db_lundef=false # https://github.com/mesonbuild/meson/issues/3853
   - ninja
   - ./uthread-test
   - ninja smoke
