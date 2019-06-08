@@ -94,6 +94,7 @@ if benchmark.found()
             'bench/detail/context.cpp',
             'bench/detail/task.cpp',
             'bench/task.cpp',
+            'bench/tcp.cpp',
         ],
         dependencies : [libevent, threads, benchmark],
         include_directories : incdirs,
