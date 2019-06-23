@@ -59,16 +59,25 @@ class Task {
                                   event_base* evb, std::unique_ptr<Task> task,
                                   TaskQueue& queue);
 
-  template <typename F,
-            typename = typename std::enable_if<FunctionReturnsVoid<F>>::type>
-  static void runInMainContext(F&& f) {
+  template <typename F>
+  static typename std::enable_if<FunctionReturnsVoid<F>>::type runInMainContext(
+      F&& f) {
     FunctionT<F> fBase{std::forward<F>(f)};
     runInMainContextVoid(fBase);
   }
 
-  template <typename F,
-            typename = typename std::enable_if<!FunctionReturnsVoid<F>>::type>
-  static auto runInMainContext(F&& f) {
+  template <typename F>
+  static
+      typename std::enable_if<FunctionReturnsRef<F>, FunctionReturnT<F>>::type
+      runInMainContext(F&& f) {
+    return *(runInMainContext([&f]() { return &(f()); }));
+  }
+
+  template <typename F>
+  static
+      typename std::enable_if<!FunctionReturnsVoid<F> && !FunctionReturnsRef<F>,
+                              FunctionReturnT<F>>::type
+      runInMainContext(F&& f) {
     static_assert(std::is_default_constructible<FunctionReturnT<F>>::value,
                   "Functions passed to runInMainContext(...) should return a "
                   "default constructible type.");

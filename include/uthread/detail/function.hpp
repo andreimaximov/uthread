@@ -37,6 +37,10 @@ template <typename F>
 constexpr bool FunctionReturnsVoid =
     std::is_same<FunctionReturnT<F>, void>::value;
 
+template <typename F>
+constexpr bool FunctionReturnsRef =
+    std::is_reference<FunctionReturnT<F>>::value;
+
 // Uses a Function to type erase the underlying function f.
 template <typename F>
 static std::unique_ptr<FunctionBase> makef(F&& f) {

@@ -84,8 +84,7 @@ class Task {
 
   // Invoke a function f from the main context. This can be called from outside
   // a task context in which case f will be invoked inline. As of now the return
-  // types of f are limited to default constructible types. This means returning
-  // references will not work - use a pointer instead.
+  // types of f are limited to references and default constructible types.
   template <typename F>
   static decltype(auto) runInMainContext(F&& f) {
     return detail::Task::runInMainContext(std::forward<F>(f));

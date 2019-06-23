@@ -8,6 +8,7 @@
 
 namespace uthread {
 
+using testing::Invoke;
 using testing::MockFunction;
 using testing::Return;
 using testing::StrictMock;
@@ -241,6 +242,22 @@ TEST(TaskTest, RunInMainContextReturnByValue) {
   taskLoop.addTask([&f]() {
     char c = Task::runInMainContext(f.AsStdFunction());
     EXPECT_EQ(c, '!');
+  });
+
+  taskLoop.runLoop();
+}
+
+TEST(TaskTest, RunInMainContextReturnByRef) {
+  TaskLoop taskLoop;
+
+  char c1 = '!';
+  StrictMock<MockFunction<char&()>> f;
+  EXPECT_CALL(f, Call()).WillOnce(Invoke([&c1]() -> char& { return c1; }));
+
+  taskLoop.addTask([&c1, &f]() {
+    char& c2 = Task::runInMainContext(f.AsStdFunction());
+    EXPECT_EQ(&c1, &c2);
+    EXPECT_EQ(c2, '!');
   });
 
   taskLoop.runLoop();
