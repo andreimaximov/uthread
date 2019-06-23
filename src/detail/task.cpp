@@ -10,6 +10,7 @@ namespace {
 thread_local Context returnTo;
 thread_local std::unique_ptr<Task> currentTask = nullptr;
 thread_local std::unique_ptr<Task> cleanupTask = nullptr;
+thread_local FunctionBase* fRunInMain = nullptr;
 
 struct Trampoline {
   TaskQueue sleepQueue;
@@ -46,7 +47,24 @@ void Task::jumpToTask(std::unique_ptr<Task> task) {
   assert(!currentTask);
 
   currentTask = std::move(task);
-  contextSwap(returnTo, currentTask->context_);
+
+  while (currentTask || fRunInMain) {
+    if (fRunInMain) {
+      // We MUST have switched back from a task context.
+      assert(currentTask);
+
+      // Indicate we are running in the main context in case runInMainContext is
+      // called from fRunInMain.
+      auto currentTaskTmp = std::move(currentTask);
+      fRunInMain->call();
+      fRunInMain = nullptr;
+      currentTask = std::move(currentTaskTmp);
+    }
+
+    if (currentTask) {
+      contextSwap(returnTo, currentTask->context_);
+    }
+  }
 
   if (cleanupTask) {
     cleanupTask.reset();
@@ -77,6 +95,20 @@ void Task::runTask() {
   // technically running. This can cause SIGSEGV or worse - UB!
   cleanupTask = std::move(currentTask);
   contextJump(returnTo);
+}
+
+void Task::runInMainContextVoid(FunctionBase& f) {
+  // Called from a main context so we can execute f inline.
+  if (!currentTask) {
+    f.call();
+    return;
+  }
+
+  // There should be no other functions enqueued for execution. Stash a pointer
+  // to the target function. This will be picked up in the main context and ran.
+  assert(!fRunInMain);
+  fRunInMain = &f;
+  contextSwap(currentTask->context_, returnTo);
 }
 
 void TaskQueue::push(std::unique_ptr<Task> task) {

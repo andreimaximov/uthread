@@ -82,6 +82,15 @@ class Task {
         taskLoop->getNextTask(), taskLoop->readyTasks_);
   }
 
+  // Invoke a function f from the main context. This can be called from outside
+  // a task context in which case f will be invoked inline. As of now the return
+  // types of f are limited to default constructible types. This means returning
+  // references will not work - use a pointer instead.
+  template <typename F>
+  static decltype(auto) runInMainContext(F&& f) {
+    return detail::Task::runInMainContext(std::forward<F>(f));
+  }
+
  private:
   std::weak_ptr<detail::TaskQueue> joinQueue_;
 };

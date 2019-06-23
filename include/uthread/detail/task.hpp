@@ -27,7 +27,7 @@ class Task {
   // finishes executing the context switches to the last main context which
   // called jumpToTask(...).
   template <typename F>
-  static std::unique_ptr<Task> make(F&& f, std::size_t stackSize = 16384,
+  static std::unique_ptr<Task> make(F&& f, std::size_t stackSize = 16'384,
                                     bool useGuardPages = false) {
     std::unique_ptr<Task> task{new Task{}};
     task->f_ = makef(std::forward<F>(f));
@@ -59,10 +59,32 @@ class Task {
                                   event_base* evb, std::unique_ptr<Task> task,
                                   TaskQueue& queue);
 
+  template <typename F,
+            typename = typename std::enable_if<FunctionReturnsVoid<F>>::type>
+  static void runInMainContext(F&& f) {
+    FunctionT<F> fBase{std::forward<F>(f)};
+    runInMainContextVoid(fBase);
+  }
+
+  template <typename F,
+            typename = typename std::enable_if<!FunctionReturnsVoid<F>>::type>
+  static auto runInMainContext(F&& f) {
+    static_assert(std::is_default_constructible<FunctionReturnT<F>>::value,
+                  "Functions passed to runInMainContext(...) should return a "
+                  "default constructible type.");
+    FunctionReturnT<F> fReturn;
+    auto fCaptureReturn = [&f, &fReturn]() { fReturn = f(); };
+    FunctionT<decltype(fCaptureReturn)> fBase{fCaptureReturn};
+    runInMainContextVoid(fBase);
+    return fReturn;
+  }
+
  private:
   Task() = default;
 
   static void runTask();
+
+  static void runInMainContextVoid(FunctionBase& f);
 
   std::unique_ptr<FunctionBase> f_;
   std::unique_ptr<Task> next_;

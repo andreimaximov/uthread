@@ -1,10 +1,16 @@
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <uthread/detail/stack.hpp>
 #include <uthread/exception.hpp>
 #include <uthread/task.hpp>
 #include <uthread/task_loop.hpp>
 
 namespace uthread {
+
+using testing::MockFunction;
+using testing::Return;
+using testing::StrictMock;
 
 TEST(TaskTest, RunSingleTask) {
   int x = 0;
@@ -163,6 +169,81 @@ TEST(TaskTest, MutableLambda) {
   taskLoop.runLoop();
 
   ASSERT_EQ(x, 1);
+}
+
+TEST(TaskTest, GuardPages) {
+  Options opts;
+  opts.stackSize = 16'384;
+  opts.useGuardPages = true;
+
+  TaskLoop taskLoop{opts};
+
+  taskLoop.addTask(detail::tryToOverflowStack<>);
+  // ASSERT_DEATH(taskLoop.runLoop());
+}
+
+TEST(TaskTest, RunInMainContextFromTask) {
+  TaskLoop taskLoop;
+
+  StrictMock<MockFunction<void()>> f;
+  EXPECT_CALL(f, Call()).Times(1);
+
+  taskLoop.addTask([&f]() {
+    Task::runInMainContext([&f]() {
+      detail::tryToOverflowStack();
+      f.Call();
+    });
+  });
+
+  taskLoop.runLoop();
+}
+
+TEST(TaskTest, RunInMainContextFromTaskRecursive) {
+  TaskLoop taskLoop;
+
+  StrictMock<MockFunction<void()>> f1;
+  EXPECT_CALL(f1, Call()).Times(1);
+
+  StrictMock<MockFunction<void()>> f2;
+  EXPECT_CALL(f2, Call()).Times(1);
+
+  taskLoop.addTask([&f1, &f2]() {
+    Task::runInMainContext([&f1, &f2]() {
+      detail::tryToOverflowStack();
+      f1.Call();
+
+      Task::runInMainContext([&f2]() {
+        detail::tryToOverflowStack();
+        f2.Call();
+      });
+    });
+  });
+
+  taskLoop.runLoop();
+}
+
+TEST(TaskTest, RunInMainContextFromMain) {
+  StrictMock<MockFunction<void()>> f;
+  EXPECT_CALL(f, Call()).Times(1);
+
+  Task::runInMainContext([&f]() {
+    detail::tryToOverflowStack();
+    f.Call();
+  });
+}
+
+TEST(TaskTest, RunInMainContextReturnByValue) {
+  TaskLoop taskLoop;
+
+  StrictMock<MockFunction<char()>> f;
+  EXPECT_CALL(f, Call()).WillOnce(Return('!'));
+
+  taskLoop.addTask([&f]() {
+    char c = Task::runInMainContext(f.AsStdFunction());
+    EXPECT_EQ(c, '!');
+  });
+
+  taskLoop.runLoop();
 }
 
 }  // namespace uthread

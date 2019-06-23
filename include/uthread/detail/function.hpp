@@ -27,11 +27,20 @@ class Function : public FunctionBase {
   F f_;
 };
 
+template <typename F>
+using FunctionT = Function<typename std::decay<F>::type>;
+
+template <typename F>
+using FunctionReturnT = typename std::result_of<F()>::type;
+
+template <typename F>
+constexpr bool FunctionReturnsVoid =
+    std::is_same<FunctionReturnT<F>, void>::value;
+
 // Uses a Function to type erase the underlying function f.
 template <typename F>
 static std::unique_ptr<FunctionBase> makef(F&& f) {
-  return std::unique_ptr<FunctionBase>{
-      new Function<typename std::decay<F>::type>{std::forward<F>(f)}};
+  return std::unique_ptr<FunctionBase>{new FunctionT<F>{std::forward<F>(f)}};
 }
 
 }  // namespace detail
