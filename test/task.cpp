@@ -180,7 +180,7 @@ TEST(TaskTest, GuardPages) {
   TaskLoop taskLoop{opts};
 
   taskLoop.addTask(detail::tryToOverflowStack<>);
-  // ASSERT_DEATH(taskLoop.runLoop());
+  ASSERT_DEATH(taskLoop.runLoop(), "");
 }
 
 TEST(TaskTest, RunInMainContextFromTask) {
