@@ -20,7 +20,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
     valgrind                                           \
     wget
 
-sudo pip3 install meson
+sudo pip3 install meson==0.52.1
 
 cd /tmp &&                                                                        \
     wget https://github.com/libevent/libevent/archive/release-2.1.8-stable.zip && \
